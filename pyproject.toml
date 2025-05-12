@@ -1,0 +1,66 @@
+[project]
+name = "serverless-sample"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dyntastic>=0.18.0",
+    "fastapi>=0.115.12",
+    "uvicorn[standard]>=0.34.2",
+]
+
+[dependency-groups]
+dev = [
+    "boto3-stubs>=1.38.13",
+    "httpx>=0.28.1",
+    "moto[dynamodb]>=5.1.4",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.1.1",
+    "pytest-env>=1.1.5",
+    "ruff>=0.11.9",
+]
+
+[tool.pytest_env]
+AWS_DEFAULT_REGION    = "us-east-1"
+AWS_ACCESS_KEY_ID     = "test"
+AWS_SECRET_ACCESS_KEY = "test"
+DYNAMODB_ENDPOINT_URL = ""
+
+[tool.pytest.ini_options]
+addopts = """
+  -ra -q
+  --cov=api
+  --cov-report=term-missing
+  --cov-report=html
+"""
+python_files = ["tests/*.py"]
+filterwarnings = [
+  "ignore::pydantic.PydanticDeprecatedSince20",
+  "ignore::UserWarning:.*Valid config keys have changed in V2",
+  "ignore:.*datetime.datetime.utcnow.*:DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+include = ["pyproject.toml", "api/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I"]
+ignore = []
+
+fixable = ["ALL"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 5
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
