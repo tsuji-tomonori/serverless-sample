@@ -24,6 +24,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
 
 # チェック系コマンドを実行
-RUN uv run --group dev ruff check . \
-    && uv run --group dev mypy . \
-    && uv run --group dev pytest
+RUN uv run --group dev task check

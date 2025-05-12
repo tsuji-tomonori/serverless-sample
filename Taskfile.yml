@@ -13,9 +13,11 @@ tasks:
 
   check:
     desc: "lint check"
+    deps: [test]
     cmds:
       - uv run --group dev ruff check .
       - uv run --group dev mypy .
+      - uv run --group dev bandit -r api
 
   all-check:
     desc: "all check"
