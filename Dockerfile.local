@@ -21,10 +21,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # 依存関係と切り分けることでレイヤーキャッシュを最適化
 COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    uv sync --frozen
 
-# 実行可能ファイルを仮想環境から優先して参照
-ENV PATH="/app/.venv/bin:\$PATH"
 
 # FastAPI 用ポートを開放
 EXPOSE 8001

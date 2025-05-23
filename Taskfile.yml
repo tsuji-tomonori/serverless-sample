@@ -6,6 +6,11 @@ tasks:
     cmds:
       - uv run --group dev pytest
 
+  local-run:
+    desc: "run local dev server"
+    cmds:
+      - uv run uvicorn api.main:app --host 0.0.0.0 --port 8001 --reload
+
   local:
     desc: "start local dev server"
     cmds:
