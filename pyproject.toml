@@ -13,6 +13,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "bandit[toml]>=1.8.3",
+    "behave>=1.2.6",
     "boto3-stubs>=1.38.13",
     "go-task-bin>=3.43.3",
     "httpx>=0.28.1",
@@ -66,3 +67,6 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[tool.mypy]
+ignore_missing_imports = true

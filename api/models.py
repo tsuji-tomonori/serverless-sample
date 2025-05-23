@@ -48,5 +48,5 @@ class ProductResponse(BaseModel):
     product_id: str
     name: str
     description: str | None = None
-    price: int
+    price: Decimal
     created_at: datetime

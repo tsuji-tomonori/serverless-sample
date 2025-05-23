@@ -11,6 +11,11 @@ from api.models import ProductUpdate
 app = FastAPI()
 
 
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+
 @app.post("/products/")
 def create_product(product: Product) -> ProductResponse:
     try:
@@ -73,4 +78,13 @@ def delete_product(product_id: str) -> Response:
     except DoesNotExist as e:
         raise HTTPException(status_code=404, detail="Product not found") from e
     item.delete()
+    return Response(status_code=204)
+
+
+@app.delete("/test/clear-table", status_code=204)
+def clear_table() -> Response:
+    """テスト用: テーブル内の全アイテムを削除"""
+    items = Product.scan()
+    for item in items:
+        item.delete()
     return Response(status_code=204)

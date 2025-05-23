@@ -23,3 +23,8 @@ tasks:
     desc: "all check"
     cmds:
       - docker build -f Dockerfile.check --rm .
+
+  behave:
+    desc: "run behave BDD tests"
+    cmds:
+      - docker compose -f docker-compose.behave.yml up --build
