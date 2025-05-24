@@ -42,11 +42,11 @@ services:
       - dynamodb-local
       - dynamodb-init
 
-  behave-runner:
+  test-runner:
     build:
       context: .
-      dockerfile: Dockerfile.behave
-    container_name: behave-runner
+      dockerfile: Dockerfile.test
+    container_name: test-runner
     command: uv run --group dev task check
     environment:
       AWS_ACCESS_KEY_ID: dummy
@@ -76,7 +76,7 @@ services:
     volumes:
       - ./allure-results:/app/allure-results
     depends_on:
-      behave-runner:
+      test-runner:
         condition: service_completed_successfully
     restart: "no"
 
