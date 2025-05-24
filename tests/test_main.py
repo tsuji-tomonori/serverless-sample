@@ -23,9 +23,23 @@ def client():
         yield TestClient(app)
 
 
-# テストデータ
+# テストデータ（リクエスト用）
 PRODUCT_1 = {"product_id": "p1", "name": "Prod1", "description": "Desc1", "price": 10}
 PRODUCT_2 = {"product_id": "p2", "name": "Prod2", "description": "Desc2", "price": 20}
+
+# テストデータ（レスポンス検証用）
+PRODUCT_1_RESPONSE = {
+    "product_id": "p1",
+    "name": "Prod1",
+    "description": "Desc1",
+    "price": "10",
+}
+PRODUCT_2_RESPONSE = {
+    "product_id": "p2",
+    "name": "Prod2",
+    "description": "Desc2",
+    "price": "20",
+}
 
 
 # 正常系: 作成、取得、一覧、更新、削除
@@ -36,7 +50,7 @@ def test_create_and_read_and_list_and_delete_product(client: TestClient):
     data1 = resp_create.json()
     assert "created_at" in data1
     data1.pop("created_at")
-    assert data1 == PRODUCT_1
+    assert data1 == PRODUCT_1_RESPONSE
 
     # 重複作成エラー
     resp_conflict = client.post("/products/", json=PRODUCT_1)
@@ -45,10 +59,10 @@ def test_create_and_read_and_list_and_delete_product(client: TestClient):
     # 単一取得
     resp_read = client.get(f"/products/{PRODUCT_1['product_id']}")
     assert resp_read.status_code == 200
-    data2 = resp_create.json()
+    data2 = resp_read.json()
     assert "created_at" in data2
     data2.pop("created_at")
-    assert data2 == PRODUCT_1
+    assert data2 == PRODUCT_1_RESPONSE
 
     # 存在しない取得エラー
     resp_notfound = client.get("/products/nonexistent")
@@ -62,7 +76,7 @@ def test_create_and_read_and_list_and_delete_product(client: TestClient):
     assert len(data3) == 1
     assert "created_at" in data3[0]
     data3[0].pop("created_at")
-    assert data3[0] == PRODUCT_1
+    assert data3[0] == PRODUCT_1_RESPONSE
 
     # 更新: name のみ
     patch_data = {"name": "UpdatedName"}
@@ -72,7 +86,7 @@ def test_create_and_read_and_list_and_delete_product(client: TestClient):
     assert updated["name"] == "UpdatedName"
     # 他フィールドは不変
     assert updated["description"] == PRODUCT_1["description"]
-    assert updated["price"] == PRODUCT_1["price"]
+    assert updated["price"] == "10"
 
     # 更新: フィールド指定なしエラー
     resp_patch_empty = client.patch(f"/products/{PRODUCT_1['product_id']}", json={})
@@ -114,6 +128,6 @@ def test_partial_update_multiple_fields(client: TestClient):
     assert resp.status_code == 200
     updated = resp.json()
     assert updated["description"] == "NewDesc"
-    assert updated["price"] == 99
+    assert updated["price"] == "99"
     # name は元のまま
     assert updated["name"] == PRODUCT_2["name"]
