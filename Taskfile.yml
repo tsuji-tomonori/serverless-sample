@@ -32,7 +32,7 @@ tasks:
         cmd: uv run --group dev pytest
         ignore_error: true
       - name: acceptance-tests
-        cmd: uv run behave -D AllureFormatter.hide_excluded=true
+        cmd: uv run behave
         ignore_error: true
 
   all-check:
