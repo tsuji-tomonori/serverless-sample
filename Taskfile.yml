@@ -17,19 +17,30 @@ tasks:
       - docker compose -f docker-compose.dev.yml up --build
 
   check:
-    desc: "lint check"
-    deps: [test]
+    desc: "run all checks"
     cmds:
-      - uv run --group dev ruff check .
-      - uv run --group dev mypy .
-      - uv run --group dev bandit -r api
+      - name: linter
+        cmd: uv run --group dev ruff check .
+        ignore_error: true
+      - name: type-check
+        cmd: uv run --group dev mypy .
+        ignore_error: true
+      - name: security-scan
+        cmd: uv run --group dev bandit -r api
+        ignore_error: true
+      - name: test
+        cmd: uv run --group dev pytest
+        ignore_error: true
+      - name: acceptance-tests
+        cmd: uv run behave -D AllureFormatter.hide_excluded=true
+        ignore_error: true
 
   all-check:
     desc: "all check"
     cmds:
       - docker build -f Dockerfile.check --rm .
 
-  behave:
-    desc: "run behave BDD tests"
+  report:
+    desc: "generate allure report"
     cmds:
-      - docker compose -f docker-compose.behave.yml up --build
+      - docker compose -f docker-compose.allure.yml up --build

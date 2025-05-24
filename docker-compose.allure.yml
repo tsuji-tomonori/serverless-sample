@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile.behave
     container_name: behave-runner
-    command: sh -c "uv run behave -D AllureFormatter.hide_excluded=true || true"
+    command: uv run --group dev task check
     environment:
       AWS_ACCESS_KEY_ID: dummy
       AWS_SECRET_ACCESS_KEY: dummy
