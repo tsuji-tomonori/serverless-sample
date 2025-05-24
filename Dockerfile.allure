@@ -1,0 +1,40 @@
+# Ubuntu 22.04 をベースイメージとして使用
+FROM ubuntu:22.04
+
+# 非対話的インストールのための環境変数設定
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 必要なパッケージをインストール
+RUN apt-get update && apt-get install -y \
+    openjdk-11-jdk \
+    wget \
+    unzip \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Java環境変数の設定
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH=$JAVA_HOME/bin:$PATH
+
+# Allure の最新版をダウンロードしてインストール
+ARG ALLURE_VERSION=2.30.0
+RUN wget -O allure-${ALLURE_VERSION}.tgz \
+    https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.tgz \
+    && tar -zxf allure-${ALLURE_VERSION}.tgz -C /opt/ \
+    && ln -s /opt/allure-${ALLURE_VERSION} /opt/allure \
+    && rm allure-${ALLURE_VERSION}.tgz
+
+# Allure を PATH に追加
+ENV PATH="/opt/allure/bin:$PATH"
+
+# 作業ディレクトリを設定
+WORKDIR /app
+
+# allure-results ディレクトリを作成
+RUN mkdir -p /app/allure-results
+
+# ポート 5050 を公開
+EXPOSE 5050
+
+# allure serve コマンドを実行（全てのインターフェースでリッスン）
+CMD ["allure", "serve", "/app/allure-results", "--host", "0.0.0.0", "--port", "5050"]

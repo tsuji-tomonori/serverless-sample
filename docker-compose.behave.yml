@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile.behave
     container_name: behave-runner
-    command: uv run behave -D AllureFormatter.hide_excluded=true
+    command: sh -c "uv run behave -D AllureFormatter.hide_excluded=true || true"
     environment:
       AWS_ACCESS_KEY_ID: dummy
       AWS_SECRET_ACCESS_KEY: dummy
@@ -64,6 +64,20 @@ services:
         condition: service_completed_successfully
       fastapi:
         condition: service_started
+    restart: "no"
+
+  allure:
+    build:
+      context: .
+      dockerfile: Dockerfile.allure
+    container_name: allure-server
+    ports:
+      - "5050:5050"
+    volumes:
+      - ./allure-results:/app/allure-results
+    depends_on:
+      behave-runner:
+        condition: service_completed_successfully
     restart: "no"
 
 volumes:
