@@ -71,3 +71,16 @@ line-ending = "auto"
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.behave]
+# 使用するフォーマッタと出力ディレクトリ
+format   = ["allure_behave.formatter:AllureFormatter"]
+outfiles = ["allure-results"]
+
+[tool.behave.userdata]
+# リンクのひな形（{} 部分に識別子が埋め込まれる）
+"AllureFormatter.link_pattern"   = "{}"
+# Issue トラッキング用 URL パターン
+"AllureFormatter.issue_pattern"  = "https://github.com/allure-framework/allure-python/issues/{}"
+# 除外されたテスト結果を隠す
+"AllureFormatter.hide_excluded"  = true
