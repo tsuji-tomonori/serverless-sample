@@ -29,7 +29,7 @@ services:
       context: .
       dockerfile: Dockerfile.local
     container_name: fastapi
-    command: uvicorn api.main:app --host 0.0.0.0 --port 8001 --reload
+    command: uv run --group dev task local-run
     ports:
       - "8001:8001"
     environment:
@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile.behave
     container_name: behave-runner
-    command: uv run behave
+    command: uv run behave -D AllureFormatter.hide_excluded=true
     environment:
       AWS_ACCESS_KEY_ID: dummy
       AWS_SECRET_ACCESS_KEY: dummy
@@ -56,7 +56,7 @@ services:
       DYNAMODB_ENDPOINT_URL: http://dynamodb-local:8000
       FASTAPI_SERVER_URL: http://fastapi:8001
     volumes:
-      - ./test-results:/app/test-results
+      - ./allure-results:/app/allure-results
     depends_on:
       dynamodb-local:
         condition: service_started

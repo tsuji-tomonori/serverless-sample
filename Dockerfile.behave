@@ -24,10 +24,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
 
 # テスト結果ディレクトリを作成
-RUN mkdir -p /app/test-results
+RUN mkdir -p /app/allure-results
 
 # 実行可能ファイルを仮想環境から優先して参照
 ENV PATH="/app/.venv/bin:$PATH"
-
-# behaveテストを実行するコマンド
-CMD ["behave", "features"]
