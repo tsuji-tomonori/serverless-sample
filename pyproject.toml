@@ -74,7 +74,6 @@ line-ending = "auto"
 
 [tool.mypy]
 ignore_missing_imports = true
-junit_xml = "allure-results/mypy-results.xml"
 
 [tool.behave]
 # 使用するフォーマッタと出力ディレクトリ

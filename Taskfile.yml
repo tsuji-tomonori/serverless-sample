@@ -23,7 +23,7 @@ tasks:
         cmd: uv run --group dev ruff check -o "allure-results/ruff-results.xml" .
         ignore_error: true
       - name: type-check
-        cmd: uv run --group dev mypy api/
+        cmd: uv run --group dev mypy --junit-xml=allure-results/mypy-results.xml api/
         ignore_error: true
       - name: security-scan
         cmd: uv run --group dev bandit -c pyproject.toml -r .
