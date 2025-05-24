@@ -39,6 +39,7 @@ addopts = """
   --cov=api
   --cov-report=term-missing
   --cov-report=html
+  --alluredir=allure-results
 """
 python_files = ["tests/*.py"]
 filterwarnings = [
@@ -51,6 +52,7 @@ filterwarnings = [
 line-length = 88
 target-version = "py313"
 include = ["pyproject.toml", "api/**/*.py", "tests/**/*.py"]
+output-format = "junit"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "B", "I"]
@@ -72,11 +74,18 @@ line-ending = "auto"
 
 [tool.mypy]
 ignore_missing_imports = true
+junit_xml = "allure-results/mypy-results.xml"
 
 [tool.behave]
 # 使用するフォーマッタと出力ディレクトリ
 format   = ["allure_behave.formatter:AllureFormatter"]
 outfiles = ["allure-results"]
+
+[tool.bandit]
+recursive = true
+targets = ["api/"]
+format = "xml"
+output = "allure-results/bandit-results.xml"
 
 [tool.behave.userdata]
 # リンクのひな形（{} 部分に識別子が埋め込まれる）
