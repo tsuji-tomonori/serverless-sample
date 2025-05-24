@@ -17,10 +17,17 @@ PRODUCT_FIXTURES = {
 
 @given("製品テーブルが空である")
 def step_empty_table(context):
-    # 新しい TestClient を作成し、異なるテスト間でクリーンな状態を維持
-    context.client = TestClient(app)
-    # テーブルをクリア
-    context.client.delete("/test/clear-table")
+    with allure.step("製品テーブルをクリア"):
+        # 新しい TestClient を作成し、異なるテスト間でクリーンな状態を維持
+        context.client = TestClient(app)
+        # テーブルをクリア
+        response = context.client.delete("/test/clear-table")
+
+        allure.attach(
+            f"ステータスコード: {response.status_code}",
+            name="テーブルクリア結果",
+            attachment_type=allure.attachment_type.TEXT,
+        )
 
 
 @given('product_id "{product_id}" の製品が存在するとき')
@@ -28,36 +35,151 @@ def step_product_exists(context, product_id):
     # 固定データで製品を作成
     data = PRODUCT_FIXTURES.get(product_id)
     assert data, f"Fixture not found for {product_id}"
-    resp = context.client.post("/products/", json=data)
-    assert resp.status_code == 200
-    context.response = resp
+
+    with allure.step(f"製品 {product_id} を事前作成"):
+        resp = context.client.post("/products/", json=data)
+
+        # リクエスト情報を添付
+        allure.attach(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            name="作成する製品データ",
+            attachment_type=allure.attachment_type.JSON,
+        )
+
+        # レスポンス情報を添付
+        allure.attach(
+            f"ステータスコード: {resp.status_code}",
+            name="レスポンスステータス",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+        try:
+            response_json = resp.json()
+            allure.attach(
+                json.dumps(response_json, ensure_ascii=False, indent=2),
+                name="作成された製品",
+                attachment_type=allure.attachment_type.JSON,
+            )
+        except json.JSONDecodeError:
+            allure.attach(
+                resp.text,
+                name="レスポンステキスト",
+                attachment_type=allure.attachment_type.TEXT,
+            )
+
+        assert resp.status_code == 200, (
+            f"製品作成に失敗: ステータスコード {resp.status_code}"
+        )
+        context.response = resp
 
 
 @given("以下の製品が存在するとき")
 def step_multiple_products_exist(context):
-    for row in context.table:
-        item = {
-            "product_id": row["product_id"],
-            "name": row["name"],
-            "description": row.get("description"),
-            "price": int(row["price"]),
-        }
-        resp = context.client.post("/products/", json=item)
-        assert resp.status_code == 200
-    context.response = resp
+    with allure.step("複数の製品を事前作成"):
+        for row in context.table:
+            item = {
+                "product_id": row["product_id"],
+                "name": row["name"],
+                "description": row.get("description"),
+                "price": int(row["price"]),
+            }
+
+            with allure.step(f"製品 {item['product_id']} を作成"):
+                resp = context.client.post("/products/", json=item)
+
+                # リクエスト情報を添付
+                allure.attach(
+                    json.dumps(item, ensure_ascii=False, indent=2),
+                    name=f"製品データ ({item['product_id']})",
+                    attachment_type=allure.attachment_type.JSON,
+                )
+
+                # レスポンス情報を添付
+                allure.attach(
+                    f"ステータスコード: {resp.status_code}",
+                    name=f"レスポンス ({item['product_id']})",
+                    attachment_type=allure.attachment_type.TEXT,
+                )
+
+                assert resp.status_code == 200, (
+                    f"製品 {item['product_id']} の作成に失敗: "
+                    f"ステータスコード {resp.status_code}"
+                )
+
+        context.response = resp
 
 
 @when('POSTリクエストを "{endpoint}" に以下のJSONで送信するとき')
 def step_post_json(context, endpoint):
-    payload = {
-        row[0]: (int(row[1]) if row[0] == "price" else row[1]) for row in context.table
-    }
-    context.response = context.client.post(endpoint, json=payload)
+    # テーブルの各行を key, value のタプルとして取り出す
+    payload = {}
+    for row in context.table:
+        field, raw_value = row.cells  # cells[0]=フィールド名, cells[1]=値
+        # price は数値にキャスト、それ以外は文字列のまま
+        payload[field] = int(raw_value) if field == "price" else raw_value
+
+    # POSTリクエストを送信
+    with allure.step(f"POSTリクエストを {endpoint} に送信"):
+        # リクエスト情報を添付
+        allure.attach(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            name="送信したJSONペイロード",
+            attachment_type=allure.attachment_type.JSON,
+        )
+
+        context.response = context.client.post(endpoint, json=payload)
+
+        # レスポンス情報を添付
+        allure.attach(
+            f"ステータスコード: {context.response.status_code}",
+            name="レスポンスステータス",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+        # レスポンスボディがJSONの場合は添付
+        try:
+            response_json = context.response.json()
+            allure.attach(
+                json.dumps(response_json, ensure_ascii=False, indent=2),
+                name="レスポンスJSON",
+                attachment_type=allure.attachment_type.JSON,
+            )
+        except Exception:
+            # JSONでない場合はテキストとして添付
+            allure.attach(
+                context.response.text,
+                name="レスポンステキスト",
+                attachment_type=allure.attachment_type.TEXT,
+            )
 
 
 @when('GETリクエストを "{endpoint}" に送信するとき')
 def step_get(context, endpoint):
-    context.response = context.client.get(endpoint)
+    with allure.step(f"GETリクエストを {endpoint} に送信"):
+        context.response = context.client.get(endpoint)
+
+        # レスポンス情報を添付
+        allure.attach(
+            f"URL: {endpoint}\nステータスコード: {context.response.status_code}",
+            name="リクエスト情報",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+        # レスポンスボディがJSONの場合は添付
+        try:
+            response_json = context.response.json()
+            allure.attach(
+                json.dumps(response_json, ensure_ascii=False, indent=2),
+                name="レスポンスJSON",
+                attachment_type=allure.attachment_type.JSON,
+            )
+        except Exception:
+            # JSONでない場合はテキストとして添付
+            allure.attach(
+                context.response.text,
+                name="レスポンステキスト",
+                attachment_type=allure.attachment_type.TEXT,
+            )
 
 
 @when('PATCHリクエストを "{endpoint}" に空のJSONで送信するとき')
@@ -67,20 +189,130 @@ def step_patch_empty(context, endpoint):
 
 @when('PATCHリクエストを "{endpoint}" に以下のJSONで送信するとき')
 def step_patch_json(context, endpoint):
-    payload = {
-        row[0]: (int(row[1]) if row[0] == "price" else row[1]) for row in context.table
-    }
+    # テーブルの各行を key, value のタプルとして取り出す
+    payload = {}
+    for row in context.table:
+        field, raw_value = row.cells  # cells[0]=フィールド名, cells[1]=値
+        # price は数値にキャスト、それ以外は文字列のまま
+        payload[field] = int(raw_value) if field == "price" else raw_value
+
+    # PATCHリクエストを送信
     context.response = context.client.patch(endpoint, json=payload)
+
+    # Allureレポートにリクエスト・レスポンス情報を添付
+    with allure.step(f"PATCHリクエストを {endpoint} に送信"):
+        # リクエスト情報を添付
+        allure.attach(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            name="送信したJSONペイロード",
+            attachment_type=allure.attachment_type.JSON,
+        )
+
+        # レスポンス情報を添付
+        allure.attach(
+            f"ステータスコード: {context.response.status_code}",
+            name="レスポンスステータス",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+        # レスポンスボディがJSONの場合は添付
+        try:
+            response_json = context.response.json()
+            allure.attach(
+                json.dumps(response_json, ensure_ascii=False, indent=2),
+                name="レスポンスJSON",
+                attachment_type=allure.attachment_type.JSON,
+            )
+        except Exception:
+            # JSONでない場合はテキストとして添付
+            allure.attach(
+                context.response.text,
+                name="レスポンステキスト",
+                attachment_type=allure.attachment_type.TEXT,
+            )
 
 
 @when('DELETEリクエストを "{endpoint}" に送信するとき')
 def step_delete(context, endpoint):
-    context.response = context.client.delete(endpoint)
+    with allure.step(f"DELETEリクエストを {endpoint} に送信"):
+        context.response = context.client.delete(endpoint)
+
+        # レスポンス情報を添付
+        allure.attach(
+            f"URL: {endpoint}\nステータスコード: {context.response.status_code}",
+            name="リクエスト情報",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+        # レスポンスボディがある場合は添付
+        if context.response.text:
+            allure.attach(
+                context.response.text,
+                name="レスポンステキスト",
+                attachment_type=allure.attachment_type.TEXT,
+            )
 
 
 @then("レスポンスのステータスコードは{status_code:d}である")
 def step_status_code(context, status_code):
-    assert context.response.status_code == status_code
+    actual_status = context.response.status_code
+
+    with allure.step(f"ステータスコードが {status_code} であることを検証"):
+        # ステータスコードの比較
+        allure.attach(
+            f"期待値: {status_code}\n実際の値: {actual_status}",
+            name="ステータスコード比較",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+        # レスポンスの詳細情報
+        allure.attach(
+            f"URL: {context.response.url}\n"
+            f"メソッド: {context.response.request.method}\n"
+            f"ステータスコード: {actual_status}\n"
+            f"ヘッダー: {dict(context.response.headers)}",
+            name="レスポンス詳細",
+            attachment_type=allure.attachment_type.TEXT,
+        )
+
+        # レスポンスボディを添付
+        try:
+            response_json = context.response.json()
+            allure.attach(
+                json.dumps(response_json, ensure_ascii=False, indent=2),
+                name="レスポンスボディ (JSON)",
+                attachment_type=allure.attachment_type.JSON,
+            )
+        except Exception:
+            allure.attach(
+                context.response.text or "(空のレスポンス)",
+                name="レスポンスボディ (テキスト)",
+                attachment_type=allure.attachment_type.TEXT,
+            )
+
+        # リクエストボディがある場合は添付
+        if (
+            hasattr(context.response.request, "content")
+            and context.response.request.content
+        ):
+            try:
+                request_json = json.loads(context.response.request.content)
+                allure.attach(
+                    json.dumps(request_json, ensure_ascii=False, indent=2),
+                    name="リクエストボディ",
+                    attachment_type=allure.attachment_type.JSON,
+                )
+            except Exception:
+                pass
+
+    # アサーション（詳細なエラーメッセージ付き）
+    assert actual_status == status_code, (
+        f"ステータスコードが期待値と異なります。\n"
+        f"期待値: {status_code}\n"
+        f"実際の値: {actual_status}\n"
+        f"URL: {context.response.url}\n"
+        f"レスポンス: {context.response.text}"
+    )
 
 
 @then('レスポンスJSONにフィールド "{field}" が含まれている')
@@ -91,9 +323,13 @@ def step_json_field(context, field):
 
 @then("レスポンスJSONは次と一致する")
 def step_json_matches(context):
-    expected = {
-        row[0]: (int(row[1]) if row[0] == "price" else row[1]) for row in context.table
-    }
+    # テーブルの各行を key, value のタプルとして取り出す
+    expected = {}
+    for row in context.table:
+        field, raw_value = row.cells  # cells[0]=フィールド名, cells[1]=値
+        # price は数値にキャスト、それ以外は文字列のまま
+        expected[field] = int(raw_value) if field == "price" else raw_value
+
     actual = context.response.json()
     for k, v in expected.items():
         if k == "price":
