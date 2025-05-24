@@ -55,17 +55,23 @@ def update_product(product_id: str, product: ProductUpdate) -> ProductResponse:
         item = Product.get(product_id)
     except DoesNotExist as e:
         raise HTTPException(status_code=404, detail="Product not found") from e
+
     # 部分更新: リクエスト JSON のキー/値を属性更新式に変換
     expressions = []
-    if product.name is not None:
-        expressions.append(A("name").set(product.name))
-    if product.description is not None:
-        expressions.append(A("description").set(product.description))
-    if product.price is not None:
-        expressions.append(A("price").set(product.price))
+    # 明示的に設定されたフィールドのみ取得
+    update_data = product.model_dump(exclude_unset=True)
+
+    if "name" in update_data:
+        expressions.append(A("name").set(update_data["name"]))
+    if "description" in update_data:
+        expressions.append(A("description").set(update_data["description"]))
+    if "price" in update_data:
+        expressions.append(A("price").set(update_data["price"]))
+
     # フィールドが指定されていなければエラー
     if not expressions:
         raise HTTPException(status_code=400, detail="No fields to update")
+
     # 更新式を適用
     item.update(*expressions)
     return Product.get(product_id)  # type: ignore
