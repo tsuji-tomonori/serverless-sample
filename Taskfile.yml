@@ -35,11 +35,6 @@ tasks:
         cmd: uv run behave --format allure_behave.formatter:AllureFormatter --outfile allure-results
         ignore_error: true
 
-  all-check:
-    desc: "all check"
-    cmds:
-      - docker build -f Dockerfile.check --rm .
-
   report:
     desc: "generate allure report"
     cmds:
