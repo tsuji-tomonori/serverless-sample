@@ -55,6 +55,8 @@ services:
       DYNAMODB_PRODUCT_TABLE_NAME: products
       DYNAMODB_ENDPOINT_URL: http://dynamodb-local:8000
       FASTAPI_SERVER_URL: http://fastapi:8001
+    volumes:
+      - ./test-results:/app/test-results
     depends_on:
       dynamodb-local:
         condition: service_started
