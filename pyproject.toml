@@ -39,7 +39,6 @@ addopts = """
   --cov=api
   --cov-report=term-missing
   --cov-report=html
-  --alluredir=allure-results
 """
 python_files = ["tests/*.py"]
 filterwarnings = [

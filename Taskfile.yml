@@ -29,7 +29,7 @@ tasks:
         cmd: uv run --group dev bandit -c pyproject.toml -r .
         ignore_error: true
       - name: test
-        cmd: uv run --group dev pytest
+        cmd: uv run --group dev pytest --alluredir=allure-results
         ignore_error: true
       - name: acceptance-tests
         cmd: uv run behave --format allure_behave.formatter:AllureFormatter --outfile allure-results
