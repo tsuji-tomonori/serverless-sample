@@ -83,7 +83,7 @@ outfiles = ["allure-results"]
 
 [tool.bandit]
 recursive = true
-targets = ["api/"]
+exclude_dirs = [".venv"]
 format = "xml"
 output = "allure-results/bandit-results.xml"
 
