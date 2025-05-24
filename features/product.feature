@@ -1,3 +1,4 @@
+@allure.label.parentSuite:behave
 Feature: 製品管理
   製品APIの利用者として
   製品の作成、取得、一覧表示、更新、削除を行い
