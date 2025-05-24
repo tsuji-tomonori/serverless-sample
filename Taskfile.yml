@@ -20,16 +20,16 @@ tasks:
     desc: "run all checks"
     cmds:
       - name: linter
-        cmd: uv run --group dev ruff check .
+        cmd: uv run --group dev ruff check --output-format junit -o allure-results/ruff-results.xml .
         ignore_error: true
       - name: type-check
-        cmd: uv run --group dev mypy .
+        cmd: uv run --group dev mypy --junit-xml=allure-results/mypy-results.xml api/
         ignore_error: true
       - name: security-scan
-        cmd: uv run --group dev bandit -r api
+        cmd: uv run --group dev bandit -r api/ -f xml -o allure-results/bandit-results.xml
         ignore_error: true
       - name: test
-        cmd: uv run --group dev pytest
+        cmd: uv run --group dev pytest --alluredir=allure-results
         ignore_error: true
       - name: acceptance-tests
         cmd: uv run behave
